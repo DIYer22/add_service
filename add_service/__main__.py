@@ -55,11 +55,9 @@ def filename(path):
     return filen
 
 
-
-
 if __name__ == "__main__":
     args = sys.argv[1:]
-    
+
     if len(args) == 0:
         print(doc)
         exit(1)
@@ -67,7 +65,7 @@ if __name__ == "__main__":
         args.append(execmd("whoami"))
     # assert os.path.isfile(exec_start)
     # assert open(exec_start).read().strip().startswith("#!")
-    
+
     exec_start, user = args
     if os.path.isfile(exec_start):
         exec_start = os.path.abspath(exec_start)
@@ -77,22 +75,21 @@ if __name__ == "__main__":
             _msg = '`.sh` file should start with "#!/usr/bin/env bash"'
             assert open(exec_start).read().strip().startswith("#!"), _msg
     else:
-    
+
         for idx in range(9999):
             name = "add_service" + str(idx)
             service_path = f"/etc/systemd/system/{name}.service"
             if not os.path.isfile(service_path):
                 break
-    
+
     dir_path = os.path.abspath(".")
     group = get_group(user)
-    
+
     service_path = f"/etc/systemd/system/{name}.service"
     service_name = os.path.basename(service_path)
-    
+
     assert not os.path.isfile(service_path), service_path
-    
-    
+
     service_str = f"""
     [Unit]
     Description="{service_name} added by add_service: {args}"
