@@ -16,7 +16,7 @@ Examples:
 ```
 **For example:** share directory "~/share" by python http.server when system startup.
 ```bash
-user@host:~$ cd share/
+user@host:~$ cd ~/share/
 user@host:~/share$ python -m add_service "`which python3` -m http.server 80" root
 ```
 ```
