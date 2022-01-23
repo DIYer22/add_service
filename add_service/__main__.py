@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-__version__ = "0.0.4"
+__version__ = "0.0.5"
 __description__ = "Python tool for simply adding startup item by systemd."
 __license__ = "MIT"
 __author__ = "DIYer22"
@@ -29,8 +29,11 @@ Usage:
     python -m add_service [shell_file/cmd] [user (default `whoami`)]
 
 Examples:
-    python -m add_service ssh_nat.sh
+    python -m add_service ssh_nat.sh   # service name is ssh_nat.service
     python -m add_service "`which python3` -m http.server 80" root
+    # service name is add_service0.service
+
+See: https://github.com/DIYer22/add_service
 """
 
 
@@ -62,6 +65,9 @@ if __name__ == "__main__":
         print(doc)
         exit(1)
     elif len(args) == 1:
+        if args[-1] in ["-h", "--help"]:
+            print(doc)
+            exit(0)
         args.append(execmd("whoami"))
     # assert os.path.isfile(exec_start)
     # assert open(exec_start).read().strip().startswith("#!")
@@ -91,23 +97,24 @@ if __name__ == "__main__":
     assert not os.path.isfile(service_path), service_path
 
     service_str = f"""
-    [Unit]
-    Description="{service_name} added by add_service: {args}"
-    After=network.service
-    [Service]
-    Type=simple
-    User={user}
-    Group={group}
-    WorkingDirectory={dir_path}
-    ExecStart={exec_start}
-    PrivateTmp=true
-    Restart=on-failure
-    [Install]
-    WantedBy=multi-user.target
+[Unit]
+Description="{service_name} added by add_service: {args}"
+After=network.service
+[Service]
+Type=simple
+User={user}
+Group={group}
+WorkingDirectory={dir_path}
+ExecStart={exec_start}
+PrivateTmp=true
+Restart=on-failure
+[Install]
+WantedBy=multi-user.target
     """
     tmp_path = "/tmp/" + service_path.replace("/", "-")
     with open(tmp_path, "w") as f:
         f.write(service_str)
+    print(f'Below will write to "{service_name}"')
     print("-" * 20)
     print(service_str)
     print("-" * 20)
