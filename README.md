@@ -7,24 +7,32 @@ Install:
     pip install add_service
 
 Usage:
-    python -m add_service [shell_file/cmd] [user (default `whoami`)]
+    python -m add_service shell_file/cmd [--user root(default `whoami`)] [--name service_name] [--start]
+
+    positional arguments:
+    script       Executable file or cmd
+
+    optional arguments:
+    -h, --help   show this help message and exit
+    --user USER  User
+    --name NAME  Service name
+    --start      Start service immediately
 
 Examples:
-    python -m add_service ssh_nat.sh   # service name is ssh_nat.service
-    python -m add_service "`which python3` -m http.server 80" root
-    # service name is add_service0.service
+    python -m add_service ssh_nat.sh   # defaut service name is ssh_nat.service
+    python -m add_service "`which python3` -m http.server 80" --user root --name http_server
 ```
 **For example:** share directory "~/share" by python http.server when system startup.
 ```bash
 user@host:~$ cd ~/share/
-user@host:~/share$ python -m add_service "`which python3` -m http.server 80" root
+user@host:~/share$ python -m add_service "`which python3` -m http.server 80" --user root --name http_server
 ```
 ```
-Below will write to "add_service0.service"
+Below will write to "http_server.service"
 --------------------
 
 [Unit]
-Description="add_service0.service added by add_service: ['/usr/bin/python3 -m http.server 80', 'root']"
+Description="http_server.service added by add_service: Namespace(name='http_server', script='/home/dl/miniconda3/bin/python3 -m http.server 80', user='root')"
 After=network.service
 [Service]
 Type=simple
@@ -38,12 +46,12 @@ Restart=on-failure
 WantedBy=multi-user.target
     
 --------------------
-Need sudo to create: /etc/systemd/system/add_service0.service
-And exec `sudo systemctl enable add_service0.service`
+Need sudo to create: /etc/systemd/system/http_server.service
+And exec `sudo systemctl enable http_server.service`
 [sudo] password for user: 
 
-Created symlink /etc/systemd/system/multi-user.target.wants/add_service0.service → /etc/systemd/system/add_service0.service.
+Created symlink /etc/systemd/system/multi-user.target.wants/http_server.service → /etc/systemd/system/http_server.service.
 Start service right now by manual:
-	sudo systemctl start add_service0.service
+	sudo systemctl start http_server.service
 ```
 
