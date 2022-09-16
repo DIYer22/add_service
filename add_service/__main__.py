@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-__version__ = "0.1"
+__version__ = "0.1.1"
 __description__ = "Python tool for simply adding startup item by systemd."
 __license__ = "MIT"
 __author__ = "DIYer22"
@@ -70,19 +70,6 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    # args = sys.argv[1:]
-
-    # if len(args) == 0:
-    #     print(doc)
-    #     exit(1)
-    # elif len(args) == 1:
-    #     if args[-1] in ["-h", "--help"]:
-    #         print(doc)
-    #         exit(0)
-    #     args.append(execmd("whoami"))
-    # assert os.path.isfile(script)
-    # assert open(script).read().strip().startswith("#!")
-
     if os.path.isfile(args.script):
         args.script = os.path.abspath(args.script)
         name = filename(args.script)
@@ -91,6 +78,7 @@ if __name__ == "__main__":
             _msg = '`.sh` file should start with "#!/usr/bin/env bash"'
             assert open(args.script).read().strip().startswith("#!"), _msg
     else:
+        assert not args.script.startswith("./"), "Executable path is not absolute path!"
 
         for idx in range(9999):
             name = "add_service" + str(idx)
