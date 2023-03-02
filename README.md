@@ -10,11 +10,12 @@ Usage:
     python -m add_service shell_file/cmd [--user root(default `whoami`)] [--name service_name] [--start]
 
     positional arguments:
-    script       Executable file or cmd
+        script       Executable file or cmd
 
     optional arguments:
     -h, --help   show this help message and exit
-    --user USER  User
+    -l, --ls     List all services created by add_service
+    --user USER  User to exec script, default is `whoami`
     --name NAME  Service name
     --start      Start service immediately
 

@@ -18,6 +18,7 @@ __classifiers__ = [
 
 import os
 import sys
+import glob
 import argparse
 
 doc = f"""
@@ -33,7 +34,8 @@ Examples:
     python -m add_service ssh_nat.sh   # defaut service name is ssh_nat.service
     python -m add_service "`which python3` -m http.server 80" --user root --name http_server
 
-See: https://github.com/DIYer22/add_service
+See: 
+    https://github.com/DIYer22/add_service
 """
 
 
@@ -58,16 +60,53 @@ def filename(path):
     return filen
 
 
+added_by_add_service = "added by add_service"
+
+
+def list_all_services():
+    str = ""
+    service_paths = sorted(glob.glob("/etc/systemd/system/*.service"))
+    for service_path in service_paths:
+        try:
+            if added_by_add_service in open(service_path).read():
+                str += f"\n\t{os.path.basename(service_path)}\t{service_path}"
+        except:
+            pass
+    str = "Services created by add_service:\n" + (str if str else "\tnull")
+    return str
+
+
 if __name__ == "__main__":
+    if (
+        "-l" in sys.argv
+        or "--ls" in sys.argv
+        or ("ls" in sys.argv and len(sys.argv) == 2)
+    ):
+        print(list_all_services())
+        exit(0)
+    if "-h" in sys.argv or "--help" in sys.argv:
+        doc = doc + "\n" + list_all_services()
+
     parser = argparse.ArgumentParser(
         description=doc, formatter_class=argparse.RawTextHelpFormatter
     )
-    parser.add_argument("script", help="Executable file or cmd")
-    parser.add_argument("--user", default=execmd("whoami"), help="User")
+    parser.add_argument("script", type=str, help="Executable file or cmd")
+    parser.add_argument(
+        "-l",
+        "--ls",
+        action="store_true",
+        help="List all services created by add_service",
+    )
+    parser.add_argument(
+        "--user",
+        default=execmd("whoami"),
+        help="User to exec script, default is `whoami`",
+    )
     parser.add_argument("--name", default=None, help="Service name")
     parser.add_argument(
         "--start", action="store_true", help="Start service immediately"
     )
+
     args = parser.parse_args()
 
     if os.path.isfile(args.script):
@@ -94,10 +133,9 @@ if __name__ == "__main__":
     service_name = os.path.basename(service_path)
 
     assert not os.path.isfile(service_path), service_path
-
     service_str = f"""
 [Unit]
-Description="{service_name} added by add_service: {args}"
+Description="{service_name} {added_by_add_service}: {args}"
 After=network.service
 [Service]
 Type=simple
