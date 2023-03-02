@@ -40,7 +40,7 @@ User=root
 Group=root
 WorkingDirectory=/home/user/share
 ExecStart=/usr/bin/python3 -m http.server 80
-PrivateTmp=true
+PrivateTmp=false
 Restart=on-failure
 [Install]
 WantedBy=multi-user.target

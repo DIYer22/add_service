@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-__version__ = "0.1.1"
+__version__ = "0.1.2"
 __description__ = "Python tool for simply adding startup item by systemd."
 __license__ = "MIT"
 __author__ = "DIYer22"
@@ -105,7 +105,7 @@ User={args.user}
 Group={group}
 WorkingDirectory={dir_path}
 ExecStart={args.script}
-PrivateTmp=true
+PrivateTmp=false
 Restart=on-failure
 [Install]
 WantedBy=multi-user.target
