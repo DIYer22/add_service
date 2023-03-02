@@ -72,7 +72,7 @@ def list_all_services():
                 str += f"\n\t{os.path.basename(service_path)}\t{service_path}"
         except:
             pass
-    str = "Services created by add_service:\n" + (str if str else "\tnull")
+    str = "Services created by add_service:" + (str if str else " null")
     return str
 
 
