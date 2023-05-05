@@ -84,6 +84,18 @@ if __name__ == "__main__":
     ):
         print(list_all_services())
         exit(0)
+
+    if "--rm" in sys.argv:
+        service_names = sys.argv[sys.argv.index("--rm") + 1 :]
+        for service_name in service_names:
+            service_name = service_name.replace(".service", "") + ".service"
+            service_path = f"/etc/systemd/system/{service_name}"
+            assert os.path.isfile(service_path), service_path
+            cmd = f'sudo systemctl stop "{service_name}"; sudo systemctl disable "{service_name}"; sudo rm "{service_path}"'
+            print(f"Remove {service_name} by cmd:\n\t{cmd}")
+            os.system(cmd)
+        exit(0)
+
     if "-h" in sys.argv or "--help" in sys.argv:
         doc = doc + "\n" + list_all_services()
 
@@ -98,11 +110,19 @@ if __name__ == "__main__":
         help="List all services created by add_service",
     )
     parser.add_argument(
+        "--rm",
+        metavar="NAME",
+        default=None,
+        help="Remove the service created by add_service",
+    )
+    parser.add_argument(
         "--user",
         default=execmd("whoami"),
         help="User to exec script, default is `whoami`",
     )
-    parser.add_argument("--name", default=None, help="Service name")
+    parser.add_argument(
+        "--name", default=None, help="Service name, default add_service0.service"
+    )
     parser.add_argument(
         "--start", action="store_true", help="Start service immediately"
     )

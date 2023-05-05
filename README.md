@@ -15,8 +15,9 @@ Usage:
     optional arguments:
     -h, --help   show this help message and exit
     -l, --ls     List all services created by add_service
+    --rm NAME    Remove the service created by add_service
     --user USER  User to exec script, default is `whoami`
-    --name NAME  Service name
+    --name NAME  Service name, default add_service0.service
     --start      Start service immediately
 
 Examples:
