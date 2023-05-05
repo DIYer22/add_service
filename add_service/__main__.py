@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-__version__ = "0.1.2"
+__version__ = "0.1.3"
 __description__ = "Python tool for simply adding startup item by systemd."
 __license__ = "MIT"
 __author__ = "DIYer22"
