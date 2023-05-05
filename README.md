@@ -1,13 +1,13 @@
-# add_service: python tool for simply adding startup item by systemd.
+# `add_service`: CLI tool for simply adding startup item by systemd.
 
 ```bash
-Python tool for simply adding startup item by systemd.
+CLI tool for simply adding startup item by systemd.
 
 Install:
     pip install add_service
 
 Usage:
-    python -m add_service shell_file/cmd [--user root(default `whoami`)] [--name service_name] [--start]
+    add_service shell_file/cmd [--user root(default `whoami`)] [--name service_name] [--start]
 
     positional arguments:
         script       Executable file or cmd
@@ -21,13 +21,13 @@ Usage:
     --start      Start service immediately
 
 Examples:
+    add_service "`which python3` -m http.server 80" --user root --name http_server
     python -m add_service ssh_nat.sh   # defaut service name is ssh_nat.service
-    python -m add_service "`which python3` -m http.server 80" --user root --name http_server
 ```
 **For example:** share directory "~/share" by python http.server when system startup.
 ```bash
 user@host:~$ cd ~/share/
-user@host:~/share$ python -m add_service "`which python3` -m http.server 80" --user root --name http_server
+user@host:~/share$ add_service "`which python3` -m http.server 80" --user root --name http_server
 ```
 ```
 Below will write to "http_server.service"

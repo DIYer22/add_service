@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-__version__ = "0.1.3"
-__description__ = "Python tool for simply adding startup item by systemd."
+__version__ = "0.2.0"
+__description__ = "CLI tool for simply adding startup item by systemd."
 __license__ = "MIT"
 __author__ = "DIYer22"
 __author_email__ = "ylxx@live.com"
@@ -28,11 +28,11 @@ Install:
     pip install add_service
 
 Usage:
-    python -m add_service shell_file/cmd [--user root(default `whoami`)] [--name service_name] [--start]
+    add_service shell_file/cmd [--user root(default `whoami`)] [--name service_name] [--start]
 
 Examples:
+    add_service "`which python3` -m http.server 80" --user root --name http_server
     python -m add_service ssh_nat.sh   # defaut service name is ssh_nat.service
-    python -m add_service "`which python3` -m http.server 80" --user root --name http_server
 
 See: 
     https://github.com/DIYer22/add_service
@@ -76,7 +76,7 @@ def list_all_services():
     return str
 
 
-if __name__ == "__main__":
+def main():
     if (
         "-l" in sys.argv
         or "--ls" in sys.argv
@@ -97,10 +97,12 @@ if __name__ == "__main__":
         exit(0)
 
     if "-h" in sys.argv or "--help" in sys.argv:
-        doc = doc + "\n" + list_all_services()
+        description = doc + "\n" + list_all_services()
+    else:
+        description = doc
 
     parser = argparse.ArgumentParser(
-        description=doc, formatter_class=argparse.RawTextHelpFormatter
+        description=description, formatter_class=argparse.RawTextHelpFormatter
     )
     parser.add_argument("script", type=str, help="Executable file or cmd")
     parser.add_argument(
@@ -191,3 +193,7 @@ WantedBy=multi-user.target
     if not args.start:
         print("Start service right now by manual:")
         print(f"\t{start_cmd}")
+
+
+if __name__ == "__main__":
+    main()

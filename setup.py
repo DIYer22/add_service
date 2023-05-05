@@ -33,4 +33,9 @@ setuptools.setup(
     install_requires=requirements,
     classifiers=info["__classifiers__"],
     include_package_data=True,
+    entry_points={
+        "console_scripts": [
+            "add_service=add_service.__main__:main",
+        ],
+    },
 )
