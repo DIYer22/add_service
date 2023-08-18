@@ -133,16 +133,20 @@ def main(argv=None):
     if os.path.isfile(args.script):
         args.script = os.path.abspath(args.script)
         name = filename(args.script)
-        assert os.access(args.script, os.X_OK), f'Please "chmod +x {args.script}"'
+        assert os.access(args.script, os.X_OK), 'Please "chmod +x {args_script}"'.format(args_script=args.script)
         if args.script.endswith(".sh"):
             _msg = '`.sh` file should start with "#!/usr/bin/env bash"'
             assert open(args.script).read().strip().startswith("#!"), _msg
     else:
-        assert not args.script.startswith("./"), "Executable path is not absolute path!"
-
+        # Get abspath of exe
+        exe_name = args.script.split(" ")[0]
+        if "/" not in exe_name and not os.system("which %s>/dev/zero"%exe_name):
+            exe_path = execmd("which %s"%exe_name).strip()
+            args.script = args.script.replace(exe_name, '"%s"'%exe_path, 1)
+        # Get default service name
         for idx in range(9999):
             name = "add_service" + str(idx)
-            service_path = f"/etc/systemd/system/{name}.service"
+            service_path = "/etc/systemd/system/{name}.service".format(name=name)
             if not os.path.isfile(service_path):
                 break
     name = args.name or name
