@@ -76,27 +76,26 @@ def list_all_services():
     return str
 
 
-def main():
-    if (
-        "-l" in sys.argv
-        or "--ls" in sys.argv
-        or ("ls" in sys.argv and len(sys.argv) == 2)
-    ):
+def main(argv=None):
+    if argv is None:
+        argv = sys.argv
+    prefix = "" if os.system("which sudo>/dev/zero") else "sudo "
+    if "-l" in argv or "--ls" in argv or ("ls" in argv and len(argv) == 2):
         print(list_all_services())
         exit(0)
 
-    if "--rm" in sys.argv:
-        service_names = sys.argv[sys.argv.index("--rm") + 1 :]
+    if "--rm" in argv:
+        service_names = argv[argv.index("--rm") + 1 :]
         for service_name in service_names:
             service_name = service_name.replace(".service", "") + ".service"
             service_path = f"/etc/systemd/system/{service_name}"
             assert os.path.isfile(service_path), service_path
-            cmd = f'sudo systemctl stop "{service_name}"; sudo systemctl disable "{service_name}"; sudo rm "{service_path}"'
+            cmd = f'{prefix}systemctl stop "{service_name}"; {prefix}systemctl disable "{service_name}"; {prefix}rm "{service_path}"'
             print(f"Remove {service_name} by cmd:\n\t{cmd}")
             os.system(cmd)
         exit(0)
 
-    if "-h" in sys.argv or "--help" in sys.argv:
+    if "-h" in argv or "--help" in argv:
         description = doc + "\n" + list_all_services()
     else:
         description = doc
@@ -178,11 +177,11 @@ WantedBy=multi-user.target
     print(service_str)
     print("-" * 20)
 
-    print(f"Need sudo to create: {service_path}")
-    print(f"And exec `sudo systemctl enable {service_name}`")
-    cmd = f"""sudo mv "{tmp_path}" "{service_path}" && sudo systemctl enable {service_name}"""
+    print(f"Need {prefix}to create: {service_path}")
+    print(f"And exec `{prefix}systemctl enable {service_name}`")
+    cmd = f"""{prefix}mv "{tmp_path}" "{service_path}" && {prefix}systemctl enable {service_name}"""
 
-    start_cmd = f"sudo systemctl start {service_name}"
+    start_cmd = f"{prefix}systemctl start {service_name}"
     if args.start:
         cmd += " && " + start_cmd
 
