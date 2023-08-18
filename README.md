@@ -4,7 +4,7 @@
 CLI tool for simply adding startup item by systemd.
 
 Install:
-    pip install add_service
+    pip install add_service  # support both python2/python3
 
 Usage:
     add_service shell_file/cmd [--user root(default `whoami`)] [--name service_name] [--start]

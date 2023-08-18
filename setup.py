@@ -12,11 +12,11 @@ if os.path.isfile("requirements.txt"):
 else:
     requirements = []
 
-with open("README.md", encoding="utf-8") as f:
-    long_description = f.read()
+with open("README.md", "rb") as f:
+    long_description = f.read().decode("utf-8")
 
 info = {}
-with open(os.path.join(here, package_name, "__main__.py")) as f:
+with open(os.path.join(here, package_name, "__main__.py"), "rb") as f:
     exec(f.read(), info)
 
 
