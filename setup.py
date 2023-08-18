@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import setuptools
 import os
+import setuptools
 
 package_name = "add_service"
 here = os.path.dirname(os.path.realpath(__file__))
@@ -16,7 +16,7 @@ with open("README.md", "rb") as f:
     long_description = f.read().decode("utf-8")
 
 info = {}
-with open(os.path.join(here, package_name, "__main__.py"), "rb") as f:
+with open(os.path.join(here, package_name, "main.py"), "rb") as f:
     exec(f.read(), info)
 
 
@@ -35,7 +35,7 @@ setuptools.setup(
     include_package_data=True,
     entry_points={
         "console_scripts": [
-            "add_service=add_service.__main__:main",
+            "add_service=add_service.main:main",
         ],
     },
 )
