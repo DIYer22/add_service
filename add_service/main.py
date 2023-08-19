@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
-__version__ = "1.0.0"
-__description__ = "CLI tool for simply adding startup item by systemd."
+__version__ = "1.1.0"
+__description__ = (
+    "Effortlessly create and manage systemd startups with just one command."
+)
 __license__ = "MIT"
 __author__ = "DIYer22"
 __author_email__ = "ylxx@live.com"
@@ -66,6 +68,20 @@ def filename(path):
     return filen
 
 
+def generate_environment_lines(envs):
+    def escape_value(value):
+        return value.replace("'", "''").replace('"', '\\"')
+
+    environment_lines = []
+
+    for key, value in envs.items():
+        escaped_value = escape_value(value)
+        environment_line = f'Environment="{key}={escaped_value}"'
+        environment_lines.append(environment_line)
+
+    return "\n".join(environment_lines)
+
+
 added_by_add_service = "added by add_service"
 
 
@@ -108,7 +124,7 @@ def main(argv=None):
                 service_name=service_name
             )
             assert os.path.isfile(service_path), service_path
-            cmd = '{prefix}systemctl stop "{service_name}"; {prefix}systemctl disable "{service_name}"; {prefix}rm "{service_path}"'.format(
+            cmd = '{prefix}systemctl stop "{service_name}";\n\t{prefix}systemctl disable "{service_name}";\n\t{prefix}rm "{service_path}";'.format(
                 prefix=prefix, service_name=service_name, service_path=service_path
             )
             print(
@@ -127,7 +143,7 @@ def main(argv=None):
     parser = argparse.ArgumentParser(
         description=description, formatter_class=argparse.RawTextHelpFormatter
     )
-    parser.add_argument("script", type=str, help="Executable file or cmd")
+    parser.add_argument("executable", type=str, help="Executable file or command line")
     parser.add_argument(
         "-l",
         "--ls",
@@ -143,7 +159,7 @@ def main(argv=None):
     parser.add_argument(
         "--user",
         default=execmd("whoami"),
-        help="User to exec script, default is `whoami`",
+        help="User to exec executable, default is `whoami`",
     )
     parser.add_argument(
         "--name", default=None, help="Service name, default add_service0.service"
@@ -152,26 +168,45 @@ def main(argv=None):
         "--start", action="store_true", help="Start service immediately"
     )
     parser.add_argument(
+        "-e",
+        "--envs",
+        default=None,
+        help='List of environment variable names to save, using comma to split (e.g. "PATH,DISPLAY")',
+    )
+    parser.add_argument(
+        "-c",
+        "--clone-envs",
+        action="store_true",
+        help="Clone all environment variables in the current shell",
+    )
+    parser.add_argument(
         "-v", "--version", action="store_true", help="Version of add_service"
     )
 
     args = parser.parse_args()
 
-    if os.path.isfile(args.script):
-        args.script = os.path.abspath(args.script)
-        name = filename(args.script)
+    # First argument of unit's"ExecStart=" should be abspath
+    if os.path.isfile(args.executable):
+        # match: "path/to/shell.sh" or "path/to/script.py"
+        args.executable = os.path.abspath(args.executable)
+        name = filename(args.executable)
         assert os.access(
-            args.script, os.X_OK
-        ), 'Please "chmod +x {args_script}"'.format(args_script=args.script)
-        if args.script.endswith(".sh"):
+            args.executable, os.X_OK
+        ), 'Please "chmod +x {args_script}"'.format(args_script=args.executable)
+        if args.executable.endswith(".sh"):
             _msg = '`.sh` file should start with "#!/usr/bin/env bash"'
-            assert open(args.script).read().strip().startswith("#!"), _msg
+            assert open(args.executable).read().strip().startswith("#!"), _msg
     else:
         # Get abspath of exe
-        exe_name = args.script.split(" ")[0]
+        exe_name = args.executable.split(" ")[0]
         if "/" not in exe_name and not os.system("which %s>/dev/zero" % exe_name):
+            # match: "exe foo --arg bar"
             exe_path = execmd("which %s" % exe_name).strip()
-            args.script = args.script.replace(exe_name, '"%s"' % exe_path, 1)
+            args.executable = args.executable.replace(exe_name, '"%s"' % exe_path, 1)
+        elif "/" in exe_name and os.path.isfile(exe_name) and "/" != exe_name[:1]:
+            # match: "./exe foo --arg bar"
+            exe_path = os.path.abspath(args.executable)
+            args.executable = args.executable.replace(exe_name, '"%s"' % exe_path, 1)
         # Get default service name
         for idx in range(9999):
             name = "add_service" + str(idx)
@@ -185,10 +220,40 @@ def main(argv=None):
 
     service_path = "/etc/systemd/system/{name}.service".format(name=name)
     service_name = os.path.basename(service_path)
+    assert not os.path.isfile(service_path), "Service file exists: " + service_path
 
-    assert not os.path.isfile(service_path), service_path
-    service_str = """
-[Unit]
+    # envs
+    envs = {}
+    if args.clone_envs:
+        IGNORE_CLONE_NAMES = [
+            "LC_PAPER",
+            "LC_MONETARY",
+            "HOME",
+            "LC_IDENTIFICATION",
+            "LC_TELEPHONE",
+            "LC_MEASUREMENT",
+            "LANG",
+            "LOGNAME",
+            "LC_NUMERIC",
+            "LC_ADDRESS",
+            "LC_NAME",
+            "USER",
+            "LC_TIME",
+        ]  # Provide by systemd default
+        IGNORE_CLONE_NAMES += ["LS_COLORS"]  # Long and useless
+        envs = dict(os.environ)
+        for key in list(envs):
+            if key in IGNORE_CLONE_NAMES:
+                envs.pop(key)
+            if key.startswith("XDG_") or key.startswith("GNOME_"):
+                envs.pop(key)  # Useless, GUI related
+    if args.envs:
+        for env_name in args.envs.split(","):
+            env_name = env_name.strip()
+            assert env_name in os.environ, 'VARNAME: "%s" not in Environment' % env_name
+            envs[env_name] = os.environ[env_name]
+    envs_str = generate_environment_lines(envs)
+    service_str = """[Unit]
 Description="{service_name} {added_by_add_service}: {args}"
 After=network.service
 [Service]
@@ -199,18 +264,20 @@ WorkingDirectory={dir_path}
 ExecStart={args_script}
 PrivateTmp=false
 Restart=on-failure
+{envs_str}
 [Install]
 WantedBy=multi-user.target
-    """.format(
+""".format(
         added_by_add_service=added_by_add_service,
         service_name=service_name,
         args=args,
         args_user=args.user,
         group=group,
         dir_path=dir_path,
-        args_script=args.script,
+        args_script=args.executable,
+        envs_str=envs_str,
     )
-    tmp_path = "/tmp/" + service_path.replace("/", "-")
+    tmp_path = "/tmp/%s.tmp.service" % name
     with open(tmp_path, "w") as f:
         f.write(service_str)
     print('Below will write to "{service_name}"'.format(service_name=service_name))
@@ -218,17 +285,12 @@ WantedBy=multi-user.target
     print(service_str)
     print("-" * 20)
 
-    print(
-        "Need {prefix}to create: {service_path}".format(
-            prefix=prefix, service_path=service_path
-        )
-    )
-    print(
-        "And exec `{prefix}systemctl enable {service_name}`".format(
-            prefix=prefix, service_name=service_name
-        )
-    )
-    cmd = """{prefix}mv "{tmp_path}" "{service_path}" && {prefix}systemctl enable {service_name}""".format(
+    # print(
+    #     "Need {prefix}to create and enable service: \n\t{service_path}".format(
+    #         prefix=prefix, service_path=service_path
+    #     )
+    # )
+    cmd = """{prefix}mv "{tmp_path}" "{service_path}" &&\n\t{prefix}systemctl enable {service_name}""".format(
         prefix=prefix,
         service_name=service_name,
         tmp_path=tmp_path,
@@ -238,16 +300,33 @@ WantedBy=multi-user.target
     start_cmd = "{prefix}systemctl start {service_name}".format(
         prefix=prefix, service_name=service_name
     )
+    status_cmd = "{prefix}systemctl status {service_name}".format(
+        prefix=prefix, service_name=service_name
+    )
+    # start_cmd = start_cmd + " &&\n\t" + status_cmd
     if args.start:
-        cmd += " && " + start_cmd
+        cmd += " &&\n\t" + start_cmd
 
-    print("Execute cmd:")
+    print(
+        "Need {prefix}to create and enable service, the execute commands:".format(
+            prefix=prefix
+        )
+    )
     print("\t" + cmd)
     assert not os.system(cmd)
-
+    print()
     if not args.start:
-        print("Start service right now by manual:")
+        print("Start service by manual:")
         print("\t" + start_cmd)
+    else:
+        print("View Service working status and log by:")
+        print("\t" + status_cmd)
+        print(
+            "\t"
+            + "{prefix}journalctl -f -u {service_name}".format(
+                prefix=prefix, service_name=service_name
+            )
+        )
 
 
 if __name__ == "__main__":
