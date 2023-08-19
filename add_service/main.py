@@ -42,6 +42,10 @@ See:
 )
 
 
+added_by_add_service = "added by add_service"
+prefix = "" if os.system("which sudo>/dev/zero") else "sudo "
+
+
 def execmd(cmd):
     """
     Execute cmd and return str(stdout)
@@ -82,10 +86,7 @@ def generate_environment_lines(envs):
     return "\n".join(environment_lines)
 
 
-added_by_add_service = "added by add_service"
-
-
-def list_all_services():
+def list_services():
     str = ""
     service_paths = sorted(glob.glob("/etc/systemd/system/*.service"))
     for service_path in service_paths:
@@ -101,12 +102,30 @@ def list_all_services():
     return str
 
 
+def remove_services(service_names):
+    for service_name in service_names:
+        service_name = service_name.replace(".service", "") + ".service"
+        service_path = "/etc/systemd/system/{service_name}".format(
+            service_name=service_name
+        )
+        assert os.path.isfile(service_path), service_path
+        cmd = '{prefix}systemctl stop "{service_name}";\n\t{prefix}systemctl disable "{service_name}";\n\t{prefix}rm "{service_path}";'.format(
+            prefix=prefix, service_name=service_name, service_path=service_path
+        )
+        print(
+            "Remove {service_name} by cmd:\n\t{cmd}".format(
+                service_name=service_name, cmd=cmd
+            )
+        )
+        assert not os.system(cmd), cmd
+
+
 def main(argv=None):
     if argv is None:
         argv = sys.argv
-    prefix = "" if os.system("which sudo>/dev/zero") else "sudo "
+
     if "-l" in argv or "--ls" in argv or ("ls" in argv and len(argv) == 2):
-        print(list_all_services())
+        print(list_services())
         exit(0)
 
     if "-v" in argv or "--version" in argv:
@@ -118,25 +137,11 @@ def main(argv=None):
 
     if "--rm" in argv:
         service_names = argv[argv.index("--rm") + 1 :]
-        for service_name in service_names:
-            service_name = service_name.replace(".service", "") + ".service"
-            service_path = "/etc/systemd/system/{service_name}".format(
-                service_name=service_name
-            )
-            assert os.path.isfile(service_path), service_path
-            cmd = '{prefix}systemctl stop "{service_name}";\n\t{prefix}systemctl disable "{service_name}";\n\t{prefix}rm "{service_path}";'.format(
-                prefix=prefix, service_name=service_name, service_path=service_path
-            )
-            print(
-                "Remove {service_name} by cmd:\n\t{cmd}".format(
-                    service_name=service_name, cmd=cmd
-                )
-            )
-            assert not os.system(cmd), cmd
+        remove_services(service_names)
         exit(0)
 
     if "-h" in argv or "--help" in argv:
-        description = doc + "\n" + list_all_services()
+        description = doc + "\n" + list_services()
     else:
         description = doc
 
@@ -285,11 +290,6 @@ WantedBy=multi-user.target
     print(service_str)
     print("-" * 20)
 
-    # print(
-    #     "Need {prefix}to create and enable service: \n\t{service_path}".format(
-    #         prefix=prefix, service_path=service_path
-    #     )
-    # )
     cmd = """{prefix}mv "{tmp_path}" "{service_path}" &&\n\t{prefix}systemctl enable {service_name}""".format(
         prefix=prefix,
         service_name=service_name,
