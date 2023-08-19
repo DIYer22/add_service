@@ -123,7 +123,6 @@ def remove_services(service_names):
 def main(argv=None):
     if argv is None:
         argv = sys.argv
-
     if "-l" in argv or "--ls" in argv or ("ls" in argv and len(argv) == 2):
         print(list_services())
         exit(0)
@@ -189,6 +188,8 @@ def main(argv=None):
     )
 
     args = parser.parse_args()
+    args_raw_str = 'add_service "%s" ' % argv[1] + str(" ".join(argv[2:]))
+    args_raw_str = args_raw_str.replace("\n", "↳")
 
     # First argument of unit's"ExecStart=" should be abspath
     if os.path.isfile(args.executable):
@@ -259,7 +260,7 @@ def main(argv=None):
             envs[env_name] = os.environ[env_name]
     envs_str = generate_environment_lines(envs)
     service_str = """[Unit]
-Description="{service_name} {added_by_add_service}: {args}"
+Description="{service_name} {added_by_add_service}: {args_raw_str}"
 After=network.service
 [Service]
 Type=simple
@@ -275,7 +276,7 @@ WantedBy=multi-user.target
 """.format(
         added_by_add_service=added_by_add_service,
         service_name=service_name,
-        args=args,
+        args_raw_str=args_raw_str,
         args_user=args.user,
         group=group,
         dir_path=dir_path,

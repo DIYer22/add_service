@@ -35,7 +35,7 @@ Below will write to "http_server.service"
 --------------------
 
 [Unit]
-Description="http_server.service added by add_service: Namespace(name='http_server', executable='/home/dl/miniconda3/bin/python3 -m http.server 80', user='root')"
+Description="http_server.service added by add_service: add_service "python3 -m http.server 80" --user root --name http_server --start"
 After=network.service
 [Service]
 Type=simple
@@ -50,7 +50,7 @@ WantedBy=multi-user.target
     
 --------------------
 Need sudo to create and enable service, the execute commands:
-        sudo mv "/tmp/http_server.tmp.service" "/etc/systemd/system/http_server.service" &&
+        sudo mv /tmp/http_server.tmp.service /etc/systemd/system/http_server.service &&
         sudo systemctl enable http_server.service &&
         sudo systemctl start http_server.service
 [sudo] password for user: 
