@@ -31,7 +31,7 @@ user@host:~/share$ add_service "python3 -m http.server 80" --user root --name ht
 ```
 
 ```
-Below will write to "http_server.service"
+Below will write to "/etc/systemd/system/http_server.service"
 --------------------
 
 [Unit]

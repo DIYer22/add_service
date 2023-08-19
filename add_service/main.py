@@ -286,7 +286,7 @@ WantedBy=multi-user.target
     tmp_path = "/tmp/%s.tmp.service" % name
     with open(tmp_path, "w") as f:
         f.write(service_str)
-    print('Below will write to "{service_name}"'.format(service_name=service_name))
+    print('Below will write to "{service_path}"'.format(service_path=service_path))
     print("-" * 20)
     print(service_str)
     print("-" * 20)
