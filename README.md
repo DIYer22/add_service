@@ -2,11 +2,11 @@
 
 ```bash
 Install:
-    pip install add_service  # support both python2/python3
+    pip install add_service --user  # Support both python2/python3
 
 Examples:
     add_service "python3 -m http.server 80" --user root --name http_server --start
-    python -m add_service ssh_nat.sh   # defaut service name is ssh_nat.service
+    python -m add_service ssh_nat.sh   # Defaut service name is ssh_nat.service
 
 Usage:
     add_service shell_file/cmd [--user root(default `whoami`)] [--name service_name] [--start]

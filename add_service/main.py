@@ -26,7 +26,7 @@ doc = """
 {__description__}
 
 Install:
-    pip install add_service
+    pip install add_service --user
 
 Usage:
     add_service shell_file/cmd [--user root(default `whoami`)] [--name service_name] [--start]
